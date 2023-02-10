@@ -68,12 +68,17 @@ class _NewPageState extends State<NewPage> {
 
   List<String> bookmark = [];
 
+  InAppWebViewGroupOptions options = InAppWebViewGroupOptions(
+    android: AndroidInAppWebViewOptions(
+      useHybridComposition: true,
+    ),
+  );
+
   @override
   void initState() {
     super.initState();
-
     pullToRefreshController = PullToRefreshController(
-        options: PullToRefreshOptions(color: Colors.blue),
+        options: PullToRefreshOptions(color: Colors.blueGrey),
         onRefresh: () async {
           if (Platform.isAndroid) {
             await inAppWebViewController!.reload();
@@ -96,13 +101,6 @@ class _NewPageState extends State<NewPage> {
         actions: [
           IconButton(
             onPressed: () async {
-              await inAppWebViewController!
-                  .loadUrl(urlRequest: URLRequest(url: Uri.parse("${s[1]}")));
-            },
-            icon: const Icon(Icons.home),
-          ),
-          IconButton(
-            onPressed: () async {
               if (await inAppWebViewController!.canGoBack()) {
                 inAppWebViewController!.goBack();
               }
@@ -110,10 +108,11 @@ class _NewPageState extends State<NewPage> {
             icon: const Icon(Icons.arrow_back_ios),
           ),
           IconButton(
-            onPressed: () {
-              inAppWebViewController!.reload();
+            onPressed: () async {
+              await inAppWebViewController!
+                  .loadUrl(urlRequest: URLRequest(url: Uri.parse("${s[1]}")));
             },
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.home),
           ),
           IconButton(
             onPressed: () async {
@@ -130,29 +129,39 @@ class _NewPageState extends State<NewPage> {
         initialUrlRequest: URLRequest(
           url: Uri.parse(s[1]),
         ),
+        initialOptions: options,
         onWebViewCreated: (val) {
           inAppWebViewController = val;
         },
+        pullToRefreshController: pullToRefreshController,
+        onLoadStop: (controller, uri) async {
+          await pullToRefreshController.endRefreshing();
+        },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async{
+        onPressed: () async {
           Uri? uri = await inAppWebViewController!.getUrl();
 
           bookmark.add(uri!.toString());
 
-          showDialog(context: context, builder: (context){
-            return Center(
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                margin: const EdgeInsets.only(left: 30,right: 30),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text("$bookmark",style: TextStyle(fontSize: 15,color: Colors.black),),
-              ),
-            );
-          });
+          showDialog(
+              context: context,
+              builder: (context) {
+                return Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    margin: const EdgeInsets.only(left: 30, right: 30),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      "$bookmark",
+                      style: TextStyle(fontSize: 15, color: Colors.black),
+                    ),
+                  ),
+                );
+              });
         },
         child: const Icon(
           Icons.bookmark_border,

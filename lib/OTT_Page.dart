@@ -72,12 +72,15 @@ class _OttPageState extends State<OttPage> {
 
   List<String> bookmark = [];
 
+  InAppWebViewGroupOptions option = InAppWebViewGroupOptions(
+      android: AndroidInAppWebViewOptions(useHybridComposition: true));
+
   @override
   void initState() {
     super.initState();
 
     pullToRefreshController = PullToRefreshController(
-        options: PullToRefreshOptions(color: Colors.blue),
+        options: PullToRefreshOptions(color: Colors.blueGrey),
         onRefresh: () async {
           if (Platform.isAndroid) {
             await inAppWebViewController!.reload();
@@ -101,13 +104,6 @@ class _OttPageState extends State<OttPage> {
         actions: [
           IconButton(
             onPressed: () async {
-              await inAppWebViewController!
-                  .loadUrl(urlRequest: URLRequest(url: Uri.parse("${s[1]}")));
-            },
-            icon: const Icon(Icons.home),
-          ),
-          IconButton(
-            onPressed: () async {
               if (await inAppWebViewController!.canGoBack()) {
                 inAppWebViewController!.goBack();
               }
@@ -115,10 +111,11 @@ class _OttPageState extends State<OttPage> {
             icon: const Icon(Icons.arrow_back_ios),
           ),
           IconButton(
-            onPressed: () {
-              inAppWebViewController!.reload();
+            onPressed: () async {
+              await inAppWebViewController!
+                  .loadUrl(urlRequest: URLRequest(url: Uri.parse("${s[1]}")));
             },
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.home),
           ),
           IconButton(
             onPressed: () async {
@@ -134,13 +131,14 @@ class _OttPageState extends State<OttPage> {
         initialUrlRequest: URLRequest(
           url: Uri.parse(s[1]),
         ),
+        initialOptions: option,
         onWebViewCreated: (val) {
           inAppWebViewController = val;
         },
-        // pullToRefreshController: pullToRefreshController,
-        // onLoadStop: (controller, uri) async{
-        //    await pullToRefreshController.endRefreshing();
-        // },
+        pullToRefreshController: pullToRefreshController,
+        onLoadStop: (controller, uri) async {
+          await pullToRefreshController.endRefreshing();
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
